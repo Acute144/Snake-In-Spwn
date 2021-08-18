@@ -1,0 +1,204 @@
+//Y = 15 is the first Y grid coord and Y = 285 is the last Y grid coord, X = -195 is the first X grid coord and X = 375 is the last X grid coord
+import "LevelSetup.spwn"
+gs = import gamescene
+extract obj_props
+gMove = 2g
+invis = 1g
+spike = 33g
+invis.alpha(0)
+direc = counter(1)
+localX = counter(30) // Fun Fact!: These counters are stupid and are not the actual local X and Y coords!
+localY = counter(145) 
+let applesX = []
+let applesY = []
+applesIndex = counter(0)
+let xPos = 45
+
+$.add(obj{
+    OBJ_ID: 8,
+    X: 40000,
+    Y: 55,
+    GROUPS: [invis, 994g]
+})
+
+$.add(obj{
+    OBJ_ID: 8,
+    X: 120,
+    Y: 55,
+    GROUPS: [invis, gMove, spike]
+})
+
+$.add(obj{
+    OBJ_ID: 211,
+    X: xPos,
+    Y: 135,
+    COLOR: 6c,
+    DONT_FADE: true, DONT_ENTER: true,
+    GROUPS: [5g, gMove, 10g, 32g] 
+})
+
+for i in 32g..11g {
+    xPos -= 30
+    $.add(obj{
+        OBJ_ID: 211,
+        X: xPos,
+        Y: 135,
+        COLOR: 6c,
+        DONT_FADE: true, DONT_ENTER: true,
+        GROUPS: [i, gMove] 
+    })
+    i.toggle_off()
+}
+
+for i in 7g..10g {
+   i.toggle_off()
+}
+
+$.add(obj{
+    OBJ_ID: 1603,
+    X: 75,
+    Y: 135,
+    DONT_FADE: true, DONT_ENTER: true,
+    GROUPS: [6g, 10g, gMove] 
+})
+
+$.add(obj{
+    OBJ_ID: 1603,
+    X: 45,
+    Y: 105,
+    ROTATION: 90,
+    DONT_FADE: true, DONT_ENTER: true,
+    GROUPS: [7g, 10g, gMove] 
+})
+
+$.add(obj{
+    OBJ_ID: 1603,
+    X: 15,
+    Y: 135,
+    ROTATION: 180,
+    DONT_FADE: true, DONT_ENTER: true,
+    GROUPS: [8g, 10g ,gMove] 
+})
+
+$.add(obj{
+    OBJ_ID: 1603,
+    X: 45,
+    Y: 165,
+    ROTATION: 270,
+    DONT_FADE: true, DONT_ENTER: true,
+    GROUPS: [9g, 10g, gMove] 
+})
+
+// 19 Possible grid spaces on X 
+// 10 Possible grid spaces on Y
+// 190 possible grid spaces
+// I didn't have to do this but I don't think it wastes groups
+applesX.push(255);                    applesX.push(75); 
+applesX.push(45);                     applesX.push(165);
+applesX.push(345);                    applesX.push(195);
+applesX.push(-135);                   applesX.push(285);                  
+applesX.push(-135);applesX.push(-135);applesX.push(195); 
+applesX.push(-135);                   applesX.push(345); 
+applesX.push(105);                    applesX.push(255); 
+applesX.push(-105);                   applesX.push(-195);
+applesX.push(-15);                    applesX.push(-165);
+applesX.push(-75);                    applesX.push(105); 
+
+applesY.push(255);applesY.push(75);applesY.push(105); 
+applesY.push(15);applesY.push(225);applesY.push(135); 
+                 applesY.push(225); 
+                 applesY.push(195); 
+                 applesY.push(135); 
+                 applesY.push(255); 
+                 applesY.push(165); 
+                 applesY.push(75); 
+                 applesY.push(195); 
+                 applesY.push(285); 
+                 applesY.push(135); 
+applesY.push(15);applesY.push(195);applesY.push(195); 
+applesY.push(285);applesY.push(75);applesY.push(225); 
+
+for i in 34g..55g{
+    $.add(obj{
+        OBJ_ID: 211,
+        X: applesX[@number(i) - 34],
+        Y: applesY[@number(i) - 34],
+        COLOR: 3c,
+        DONT_FADE: true, DONT_ENTER: true,
+        GROUPS: [i, gMove]
+    })
+    let appleGroupNum = @number(i) - 33
+    i.toggle_off()
+}
+34g.toggle_on()
+
+-> 995g.toggle_off()
+-> 3c.set(255, 51, 51, 0)
+-> 6c.set(65, 186, 255, 0)
+gMove.lock_to_player(lock_y = false, duration = 330)
+
+gs.button_b().on_triggered(!{
+    for i in 11g..32g{
+        -> i.move_to(@group(@number(i) + 1), 0.2)
+    }
+
+    -> if direc == 1 {
+        -> 10g.move(10, 0, 0.2)
+        localX += 30
+    } 
+    -> if direc == 2 {
+        -> 10g.move(0, -10, 0.2)
+        localY -= 30
+    } 
+    -> if direc == 3 {
+        -> 10g.move(-10, 0, 0.2)
+        localX -= 30
+    } 
+    -> if direc == 4 {
+        -> 10g.move(0, 10, 0.2)
+        localY += 30
+    } 
+
+    applesIndexNum = applesIndex.to_const(..21)
+    if localX == applesX[applesIndexNum] - 15 && localY == applesY[applesIndexNum] + 10 {
+        wait()
+        -> @group(applesIndexNum + 34).toggle_off()
+        -> @group(applesIndexNum + 35).toggle_on()
+        -> applesIndex += 1
+        -> @group(31 - applesIndexNum).toggle_on() // Toggles on part of the snake
+        if applesIndex > 20 {
+            995g.toggle_on()
+            994g.toggle_off()
+        }
+    }
+
+    if localX >= 360 || localX == -240 || localY >= 325 || localY <= -5 {
+        wait()
+        -> spike.move(-120, 0, 0.2) // Kills the player
+    }
+})
+
+gs.button_a().on_triggered(!{
+
+    if direc == 4 {
+        9g.toggle_off()
+        6g.toggle_on()
+    } else if direc == 1 {
+        6g.toggle_off()
+        7g.toggle_on()
+    } else if direc == 2 {
+        7g.toggle_off()
+        8g.toggle_on()
+    } else if direc == 3 {
+        8g.toggle_off()
+        9g.toggle_on()
+    } else {}
+
+    if direc < 4 {
+        wait()
+        direc += 1
+    } else {
+        wait()
+        direc -= 3
+    }
+})
